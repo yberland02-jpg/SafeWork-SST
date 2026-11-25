@@ -128,7 +128,7 @@ let last=null,pTimer=null,pEnd=0,cdTimer=null;
 // Sans databaseURL : mode local (alertes sur cet appareil ; mot de passe superviseur défini plus bas).
 // Avec Firebase : comptes e-mail / mot de passe pour le superviseur et les SST (rôles stockés dans la base),
 // alertes partagées en temps réel. Les travailleurs n'ont pas de compte : ils envoient leurs alertes anonymement.
-const FIREBASE_CONFIG={apiKey:"",authDomain:"",databaseURL:"",projectId:"",appId:""};
+const FIREBASE_CONFIG={apiKey:"AIzaSyCEDh4DBz99QWKKulIxE3maPFtUsI__1t8",authDomain:"safework-sst-a366b.firebaseapp.com",databaseURL:"https://safework-sst-a366b-default-rtdb.firebaseio.com",projectId:"safework-sst-a366b",appId:"1:530305533847:web:d2640761eced881b4666d2"};
 const DB_PATH='pti/alertes';
 const FB=!!FIREBASE_CONFIG.databaseURL;
 let ref=null,roleRef=null,authReady=Promise.resolve(),listening=false,role=null,pendingTab=2;

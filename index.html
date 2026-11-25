@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SafeWork – Protection du travailleur isolé</title>
+<meta name="theme-color" content="#1d6fe8">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f5f6f8;--card:#fff;--tx:#1b1f27;--mut:#6b7280;--bd:#e2e5ea;--ac:#1d6fe8;--rd:#d92d20;--gn:#12a150;--or:#e8890c}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0f1217;--card:#181d25;--tx:#eef1f5;--mut:#9aa4b2;--bd:#2a313c}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0f1217;--card:#181d25;--tx:#eef1f5;--mut:#9aa4b2;--bd:#2a313c}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:480px;margin:0 auto;padding:16px}
+h1{font-size:20px;margin:0 0 12px}
+nav{display:flex;gap:8px;margin-bottom:16px}
+nav button{flex:1;padding:10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:10px;font:inherit;cursor:pointer}
+nav button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:14px}
+.card h2{font-size:15px;margin:0 0 10px;color:var(--mut);font-weight:600}
+input,select{width:100%;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit}
+button.b{padding:12px 16px;border:0;border-radius:10px;font:inherit;font-weight:600;color:#fff;background:var(--ac);cursor:pointer}
+button.b.g{background:var(--gn)}button.b.o{background:var(--or)}
+.sos{display:block;width:170px;height:170px;margin:8px auto;border-radius:50%;border:0;background:var(--rd);color:#fff;font-size:34px;font-weight:800;box-shadow:0 6px 20px rgba(217,45,32,.4);cursor:pointer}
+.row{display:flex;gap:8px;align-items:center}
+.big{font-size:40px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums}
+.mut{color:var(--mut);font-size:13px}
+.alert{border-left:5px solid var(--rd);padding:10px 12px;margin-bottom:10px;background:var(--bg);border-radius:8px}
+.alert.ok{border-color:var(--gn);opacity:.7}
+.alert a{color:var(--ac)}
+.tag{display:inline-block;font-size:12px;padding:2px 8px;border-radius:99px;background:var(--rd);color:#fff;margin-right:6px}
+.hide{display:none}
+label{display:block;font-size:13px;color:var(--mut);margin:12px 0 4px}
+textarea{width:100%;min-height:70px;padding:10px;border:1px solid var(--bd);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit}
+.chk{display:flex;gap:8px;align-items:center;margin:6px 0;color:var(--tx);font-size:15px}.chk input{width:auto}
+#pc{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:flex-start;justify-content:center;overflow:auto;z-index:8;padding:calc(16px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+#pc .card{width:100%;max-width:480px;margin:0}
+.tag.sst{background:var(--ac)}
+.pie{display:flex;gap:12px;align-items:center;flex-wrap:wrap}.pie svg{flex:none}.legend{flex:1;min-width:150px}.lg{display:grid;grid-template-columns:12px 1fr auto;gap:6px;align-items:center;font-size:13px;margin:3px 0}.lg i{display:block;width:12px;height:12px;border-radius:3px}.lg span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.kpi{background:var(--bg);border-radius:10px;padding:8px;text-align:center}.kpi b{display:block;font-size:22px}.kpi span{font-size:12px;color:var(--mut)}
+.ch{margin-top:14px}.ch h3{font-size:14px;margin:0 0 6px}.br{display:grid;grid-template-columns:110px 1fr 28px;gap:8px;align-items:center;font-size:13px;margin:4px 0}.br span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.trk{background:var(--bg);border-radius:6px}.br i{display:block;height:12px;border-radius:6px;background:var(--ac)}.br b{text-align:right}
+.esc{margin-top:6px;padding:6px 10px;border-radius:8px;background:var(--rd);color:#fff;font-size:14px;font-weight:600}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:0 8px}
+.pcs{margin-top:8px;padding:8px 10px;border:1px dashed var(--bd);border-radius:8px;font-size:14px}
+#ov{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;flex-direction:column;color:#fff;z-index:9;text-align:center;padding:20px}
+#ov .n{font-size:90px;font-weight:800}
+</style>
+</head>
+<body>
+<main>
+<h1>🛡️ SafeWork <span class="mut">PTI</span></h1>
+<p class="mut" id="cloud" style="margin:-6px 0 12px"></p>
+<nav><button id="t1" class="on">Travailleur</button><button id="t2">Superviseur</button><button id="t3">SST</button></nav>
+<div class="card hide" id="alm">
+  <div id="almAlert" class="esc hide" style="margin:0 0 10px"></div>
+  <button class="b" id="armBtn" style="width:100%">🔔 Activer l’alarme (SST / superviseur)</button>
+  <p class="mut" id="almTxt" style="margin:8px 0 0">Active le son et la vibration sur cet appareil. À activer une fois par session.</p>
+</div>
+
+<section id="v1">
+  <div class="card"><h2>Identité et hall</h2><div class="row"><input id="name" placeholder="Votre nom" autocomplete="name" style="flex:2"><select id="hall" style="flex:1" aria-label="Hall"><option value="">Hall…</option><option>Hall 1</option><option>Hall 2</option><option>Hall 3</option><option>Hall 4</option><option>Hall 5</option><option>Hall 6</option><option>Hall 7</option><option>Hall 8</option><option>Peinture</option><option>V310</option></select></div></div>
+  <div class="card"><h2>Alerte SOS (prévient les SST et le superviseur)</h2>
+    <button class="sos" id="sos">SOS</button>
+    <input id="sstMsg" placeholder="Lieu / situation (facultatif)" style="margin-top:10px"><p class="mut" style="text-align:center;margin:8px 0 0">Prévient les SST et le superviseur. Compte à rebours de 5 s pour annuler.</p>
+    <p id="sendStatus" class="mut" style="text-align:center;margin:8px 0 0;font-weight:600"></p>
+  </div>
+  <div class="card"><h2>Minuteur de prévoyance</h2>
+    <div id="pIdle"><div class="row"><select id="dur"><option value="1">1 min (test)</option><option value="15">15 min</option><option value="30" selected>30 min</option><option value="60">1 h</option><option value="120">2 h</option></select><button class="b" id="pGo">Démarrer</button></div>
+    <p class="mut">Sans confirmation avant la fin, une alerte est envoyée.</p></div>
+    <div id="pRun" class="hide"><div class="big" id="pT">--:--</div><div class="row" style="margin-top:10px"><button class="b g" id="pOk" style="flex:1">Tout va bien (+ même durée)</button><button class="b o" id="pStop">Arrêter</button></div></div>
+  </div>
+  <div class="card"><h2>Position</h2><div id="pos" class="mut">En attente…</div></div>
+</section>
+
+<section id="v2" class="hide">
+  <div class="row" style="justify-content:flex-end;margin-bottom:8px"><button class="b lo" style="background:var(--mut);padding:6px 12px">Se déconnecter</button></div>
+  <div class="card"><h2>Statistiques</h2>
+  <div class="kpis" id="kpis"></div>
+  <details id="statDet" style="margin-top:10px"><summary style="cursor:pointer;font-weight:600">Voir les graphiques</summary><div id="statsBox"></div></details>
+  <button class="b" id="exp" style="width:100%;margin-top:12px">📥 Exporter les données (Excel + graphiques)</button>
+  <p class="mut" id="expMsg" style="margin:8px 0 0"></p>
+</div>
+  <div class="card"><h2>Alertes reçues</h2><div id="list"></div>
+    <button class="b" id="clr" style="background:var(--mut)">Vider l’historique</button></div>
+  <p class="mut">Les alertes sont partagées entre appareils uniquement si Firebase est configuré (voir README). Sans configuration, elles restent sur cet appareil.</p>
+</section>
+<section id="v3" class="hide">
+  <div class="row" style="justify-content:flex-end;margin-bottom:8px"><button class="b lo" style="background:var(--mut);padding:6px 12px">Se déconnecter</button></div>
+  <div class="card"><h2>Alertes SST</h2><div id="listS"></div></div>
+  <p class="mut">Cet écran reçoit les SOS et les alertes de prévoyance, comme celui du superviseur.</p>
+</section>
+</main>
+
+<div id="lg" style="position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:10;padding:16px"><div class="card" style="width:100%;max-width:360px;margin:0"><h2 id="lgTitle">Accès superviseur</h2><div id="lgMailBox"><label for="lgMail">E-mail</label><input id="lgMail" type="email" autocomplete="username"></div><label for="lgPw">Mot de passe</label><input id="lgPw" type="password" autocomplete="current-password"><p class="mut" id="lgErr" style="color:var(--rd);margin:8px 0 0"></p><div class="row" style="margin-top:12px"><button class="b" id="lgGo" style="flex:1">Se connecter</button><button class="b" id="lgX" style="background:var(--mut)">Annuler</button></div></div></div>
+<div id="pc"><div class="card">
+  <h2>Prise en charge de la victime</h2>
+  <div class="mut" id="pcT"></div>
+  <label for="pcWho">Responsable de la prise en charge *</label><input id="pcWho" placeholder="Nom et fonction">
+  <label for="pcEtat">État de la victime</label>
+  <select id="pcEtat"><option>Consciente et réactive</option><option>Consciente, confuse ou choquée</option><option>Blessée, consciente</option><option>Inconsciente</option><option>Ne répond pas / injoignable</option></select>
+  <label>Actions engagées</label>
+  <div class="chk"><input type="checkbox" class="pcA" id="a1" value="Victime contactée par téléphone"><label for="a1" style="margin:0">Victime contactée par téléphone</label></div>
+  <div class="chk"><input type="checkbox" class="pcA" id="a2" value="Équipe d’intervention envoyée"><label for="a2" style="margin:0">Équipe d’intervention envoyée</label></div>
+  <div class="chk"><input type="checkbox" class="pcA" id="a3" value="Secours alertés (15/18/112)"><label for="a3" style="margin:0">Secours alertés (15/18/112)</label></div>
+  <div class="chk"><input type="checkbox" class="pcA" id="a4" value="Proche ou employeur prévenu"><label for="a4" style="margin:0">Proche ou employeur prévenu</label></div>
+  <div class="chk"><input type="checkbox" class="pcA" id="a5" value="Faux déclenchement"><label for="a5" style="margin:0">Faux déclenchement</label></div>
+  <label>Zones blessées</label><div class="g2" id="pcZ"></div>
+  <label>Nature des blessures</label><div class="g2" id="pcN"></div>
+  <label for="pcAutre">Autre blessure ou précision (côté gauche/droit, gravité…)</label><input id="pcAutre" placeholder="Ex. : main droite, doigts écrasés">
+  <label for="pcNote">Observations (blessures, lieu, circonstances)</label><textarea id="pcNote"></textarea>
+  <label for="pcSt">Statut</label><select id="pcSt"><option>En cours</option><option>Clôturée</option></select>
+  <div class="row" style="margin-top:16px"><button class="b" id="pcSave" style="flex:1">Enregistrer</button><button class="b" id="pcX" style="background:var(--mut)">Fermer</button></div>
+</div></div>
+<div id="ov"><div>Envoi de l’alerte SOS dans</div><div class="n" id="cd">5</div><button class="b" id="cx" style="background:#fff;color:#000;margin-top:14px">ANNULER</button></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const KEY='safework_alerts';
+let last=null,pTimer=null,pEnd=0,cdTimer=null;
+
+// ===== CONFIGURATION FIREBASE (facultative) =====
+// Sans databaseURL : mode local (alertes sur cet appareil ; mot de passe superviseur défini plus bas).
+// Avec Firebase : comptes e-mail / mot de passe pour le superviseur et les SST (rôles stockés dans la base),
+// alertes partagées en temps réel. Les travailleurs n'ont pas de compte : ils envoient leurs alertes anonymement.
+const FIREBASE_CONFIG={apiKey:"",authDomain:"",databaseURL:"",projectId:"",appId:""};
+const DB_PATH='pti/alertes';
+const FB=!!FIREBASE_CONFIG.databaseURL;
+let ref=null,roleRef=null,authReady=Promise.resolve(),listening=false,role=null,pendingTab=2;
+function setCloud(t){$('cloud').textContent=t}
+function cloudStatus(){
+  if(!FB){setCloud('Mode local : alertes non partagées entre appareils (voir README)');return}
+  if(listening)setCloud('☁️ Connecté ('+(role==='superviseur'?'superviseur':'SST')+') : alertes en temps réel');
+  else setCloud('☁️ Les alertes envoyées sont transmises aux SST');
+}
+function load(){if(FB)return window.__mem||[];try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return window.__mem||[]}}
+function save(a){
+  const prev=window.__mem||(FB?[]:(function(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}})());
+  window.__mem=a;
+  if(!FB){try{localStorage.setItem(KEY,JSON.stringify(a))}catch(e){}return Promise.resolve(true)}
+  const o={},pm={};prev.forEach(x=>{pm[x.id]=JSON.stringify(x)});
+  a.forEach(x=>{const j=JSON.stringify(x);if(pm[x.id]!==j)o[x.id]=JSON.parse(j)});
+  prev.forEach(x=>{if(!a.some(y=>y.id===x.id))o[x.id]=null});
+  if(!Object.keys(o).length)return Promise.resolve(true);
+  const send=authReady.then(()=>ref.update(o)).then(()=>true).catch(()=>false);
+  const slow=new Promise(r=>setTimeout(()=>r('pending'),8000));
+  return Promise.race([send,slow]);
+}
+function startListen(){
+  if(listening||!ref)return;listening=true;
+  ref.on('value',s=>{
+    const v=s.val(),a=Array.isArray(v)?v.filter(Boolean):(v?Object.values(v):[]);
+    a.forEach(x=>{if(x.pc){x.pc.act=x.pc.act||[];x.pc.zones=x.pc.zones||[];x.pc.types=x.pc.types||[]}});
+    a.sort((p,q)=>q.id-p.id);window.__mem=a;render();
+  },()=>{listening=false;setCloud('⚠️ Lecture impossible : vérifiez le rôle du compte et les règles Firebase')});
+  cloudStatus();
+}
+function stopListen(){if(ref)ref.off('value');listening=false;window.__mem=[];role=null;cloudStatus();render()}
+function initCloud(){
+  cloudStatus();
+  if(!FB)return;
+  if(!window.firebase){setCloud('⚠️ Firebase non chargé');return}
+  try{
+    firebase.initializeApp(FIREBASE_CONFIG);
+    ref=firebase.database().ref(DB_PATH);
+    roleRef=uid=>firebase.database().ref('pti/roles/'+uid);
+    const auth=firebase.auth();
+    authReady=new Promise(res=>{
+      let first=true;const done=()=>{if(first){first=false;res()}};
+      auth.onAuthStateChanged(async u=>{
+        if(!u){
+          try{await auth.signInAnonymously()}
+          catch(e){setCloud('⚠️ Activez l’authentification anonyme dans Firebase (voir README) : les alertes ne pourront pas être envoyées');done()}
+          return;
+        }
+        if(u.isAnonymous){if(listening)stopListen();role=null;cloudStatus();done();return}
+        let r=null;try{r=(await roleRef(u.uid).once('value')).val()}catch(e){}
+        if(r==='sst'||r==='superviseur'){role=r;startListen();cloudStatus();done()}
+        else{role=null;await auth.signOut()}
+      });
+    });
+  }catch(e){setCloud('⚠️ Erreur de configuration Firebase')}
+}
+
+function getPos(){
+  if(!navigator.geolocation){$('pos').textContent='Géolocalisation indisponible.';return}
+  navigator.geolocation.watchPosition(p=>{
+    last={lat:p.coords.latitude,lon:p.coords.longitude,acc:Math.round(p.coords.accuracy)};
+    $('pos').textContent=last.lat.toFixed(5)+', '+last.lon.toFixed(5)+' (±'+last.acc+' m)';
+  },e=>{$('pos').textContent='Position non disponible ('+e.message+'). L’alerte sera envoyée sans coordonnées.'},{enableHighAccuracy:true});
+}
+
+function raise(type,msg){
+  const a=load();
+  a.unshift({id:Date.now(),type,msg:msg||'',hall:$('hall').value,who:$('name').value.trim()||'Anonyme',at:new Date().toLocaleString('fr-FR'),pos:last,ok:false});
+  const p=save(a);render();
+  $('sendStatus').textContent='Envoi en cours…';
+  p.then(r=>{$('sendStatus').textContent=r===true?(FB?'✔ Alerte transmise aux SST.':'✔ Alerte enregistrée (mode local : non partagée).'):'⚠️ Transmission non confirmée : prévenez un SST par téléphone ou appelez les secours (15/18/112).'});
+}
+
+function fill(el,a){
+  el.innerHTML=a.length?a.map(x=>
+    '<div class="alert'+(x.ok?' ok':'')+'"><span class="tag'+(x.type==='SST'?' sst':'')+'">'+x.type+'</span><b>'+esc(x.who)+'</b>'+(x.hall?' <span class="mut">· '+esc(x.hall)+'</span>':'')+'<div class="mut">'+x.at+'</div>'+(x.msg?'<div>'+esc(x.msg)+'</div>':'')+
+    (x.pos?'<a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat='+x.pos.lat+'&mlon='+x.pos.lon+'#map=17/'+x.pos.lat+'/'+x.pos.lon+'">Voir la position</a>':'<span class="mut">Position inconnue</span>')+
+    (!x.pc&&Date.now()-x.id>ESC?'<div class="esc">⚠ RELANCE : aucune prise en charge depuis '+Math.floor((Date.now()-x.id)/60000)+' min</div>':'')+(x.pc?pcHtml(x):'<div style="margin-top:6px"><a href="#" data-id="'+x.id+'">Prendre en charge la victime</a></div>')+'</div>').join(''):'<p class="mut">Aucune alerte.</p>';
+}
+function render(){const a=load();fill($('list'),a.filter(x=>x.type==='SOS'||x.type==='PRÉVOYANCE'));fill($('listS'),a);renderStats();checkAlarm()}
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+document.addEventListener('click',e=>{
+  const id=e.target.dataset&&e.target.dataset.id;if(!id)return;e.preventDefault();
+  openPc(id);
+});
+$('clr').onclick=()=>{save([]);render()};
+
+// SOS
+$('sos').onclick=()=>{
+  let n=5;$('cd').textContent=n;$('ov').style.display='flex';
+  cdTimer=setInterval(()=>{n--;$('cd').textContent=n;if(n<=0){clearInterval(cdTimer);$('ov').style.display='none';raise('SOS',$('sstMsg').value.trim());$('sstMsg').value='';if(navigator.vibrate)navigator.vibrate(300)}},1000);
+};
+$('cx').onclick=()=>{clearInterval(cdTimer);$('ov').style.display='none'};
+
+// Prévoyance
+function tick(){
+  const s=Math.max(0,Math.round((pEnd-Date.now())/1000));
+  $('pT').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+  if(s<=0){stopP();raise('PRÉVOYANCE')}
+}
+function stopP(){clearInterval(pTimer);$('pIdle').classList.remove('hide');$('pRun').classList.add('hide')}
+$('pGo').onclick=()=>{pEnd=Date.now()+$('dur').value*60000;$('pIdle').classList.add('hide');$('pRun').classList.remove('hide');tick();pTimer=setInterval(tick,1000)};
+$('pOk').onclick=()=>{pEnd=Date.now()+$('dur').value*60000;tick()};
+$('pStop').onclick=stopP;
+
+// Prise en charge
+let pcId=null;
+const ESC=120000;
+setInterval(render,15000);
+const ZONES=['Tête','Yeux','Visage / mâchoire','Oreilles','Cou / nuque','Thorax / côtes','Dos / colonne','Abdomen','Épaule','Bras / coude','Main(s) / doigts','Hanche / bassin','Jambe / genou','Pied / cheville','Aucune blessure visible'];
+const NAT=['Coupure / plaie','Brûlure','Fracture suspectée','Contusion / hématome','Entorse / luxation','Projection chimique','Électrisation','Écrasement','Chute de hauteur','Perte de connaissance','Saignement important','Difficulté respiratoire'];
+function mk(id,cls,l){$(id).innerHTML=l.map((v,i)=>'<div class="chk"><input type="checkbox" class="'+cls+'" id="'+cls+i+'" value="'+v+'"><label for="'+cls+i+'" style="margin:0">'+v+'</label></div>').join('')}
+function chk(cls){return [...document.querySelectorAll('.'+cls)].filter(c=>c.checked).map(c=>c.value)}
+function setChk(cls,a){document.querySelectorAll('.'+cls).forEach(c=>{c.checked=(a||[]).includes(c.value)})}
+mk('pcZ','pcZk',ZONES);mk('pcN','pcNk',NAT);
+function pcHtml(x){const p=x.pc;return '<div class="pcs"><b>'+esc(p.st)+'</b> · '+esc(p.who)+' · '+p.at+'<br>État : '+esc(p.etat)+(p.zones&&p.zones.length?'<br>Zones blessées : '+p.zones.map(esc).join(', '):'')+(p.types&&p.types.length?'<br>Nature : '+p.types.map(esc).join(', '):'')+(p.autre?'<br>Précision : '+esc(p.autre):'')+(p.act.length?'<br>Actions : '+p.act.map(esc).join(', '):'')+(p.note?'<br>Notes : '+esc(p.note):'')+'<br><a href="#" data-id="'+x.id+'">Modifier la prise en charge</a></div>'}
+function openPc(id){
+  pcId=id;const x=load().find(y=>String(y.id)===id);if(!x)return;const p=x.pc||{};
+  $('pcT').textContent=x.who+' · '+x.type+' · '+x.at;
+  $('pcWho').value=p.who||'';$('pcEtat').value=p.etat||'Consciente et réactive';
+  document.querySelectorAll('.pcA').forEach(c=>{c.checked=(p.act||[]).includes(c.value)});
+  setChk('pcZk',p.zones);setChk('pcNk',p.types);$('pcAutre').value=p.autre||'';
+  $('pcNote').value=p.note||'';$('pcSt').value=p.st||'En cours';
+  $('pc').style.display='flex';
+}
+$('pcX').onclick=()=>{$('pc').style.display='none'};
+$('pcSave').onclick=()=>{
+  if(!$('pcWho').value.trim()){$('pcWho').focus();return}
+  const a=load();
+  a.forEach(x=>{if(String(x.id)===pcId){
+    x.pc={who:$('pcWho').value.trim(),etat:$('pcEtat').value,act:[...document.querySelectorAll('.pcA')].filter(c=>c.checked).map(c=>c.value),note:$('pcNote').value.trim(),zones:chk('pcZk'),types:chk('pcNk'),autre:$('pcAutre').value.trim(),st:$('pcSt').value,at:(x.pc&&x.pc.at)||new Date().toLocaleString('fr-FR'),ts:(x.pc&&x.pc.ts)||Date.now(),ct:$('pcSt').value==='Clôturée'?((x.pc&&x.pc.ct)||Date.now()):null};
+    x.ok=x.pc.st==='Clôturée';
+  }});
+  save(a);$('pc').style.display='none';render();
+};
+
+// Statistiques et export
+function cnt(l){const m={};l.forEach(k=>{m[k]=(m[k]||0)+1});return Object.entries(m).sort((a,b)=>b[1]-a[1])}
+const COL=['#1d6fe8','#e8890c','#12a150','#d92d20','#8b5cf6','#06b6d4','#eab308','#ec4899','#64748b','#84cc16'];
+function topN(r){return r.length>10?[...r.slice(0,9),['Autres',+r.slice(9).reduce((s,v)=>s+v[1],0).toFixed(1)]]:r}
+function slices(r,cx,cy,rad){const tot=r.reduce((s,v)=>s+v[1],0);let a=-Math.PI/2;return r.map((v,i)=>{const f=v[1]/tot,b=a+f*2*Math.PI;const d=f>=.9999?null:'M'+cx+' '+cy+' L'+(cx+rad*Math.cos(a)).toFixed(2)+' '+(cy+rad*Math.sin(a)).toFixed(2)+' A'+rad+' '+rad+' 0 '+(f>.5?1:0)+' 1 '+(cx+rad*Math.cos(b)).toFixed(2)+' '+(cy+rad*Math.sin(b)).toFixed(2)+' Z';a=b;return{d,f,i,v}})}
+function pie(t,r){
+  r=topN(r.filter(v=>v[1]>0));if(!r.length)return '';
+  const S=slices(r,60,60,56);
+  const svg='<svg viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="'+esc(t)+'">'+S.map(s=>s.d?'<path d="'+s.d+'" fill="'+COL[s.i%10]+'" stroke="var(--card)" stroke-width="1"/>':'<circle cx="60" cy="60" r="56" fill="'+COL[s.i%10]+'"/>').join('')+'</svg>';
+  const leg=S.map(s=>'<div class="lg"><i style="background:'+COL[s.i%10]+'"></i><span title="'+esc(s.v[0])+'">'+esc(s.v[0])+'</span><b>'+s.v[1]+' ('+Math.round(s.f*100)+'%)</b></div>').join('');
+  return '<div class="ch"><h3>'+t+'</h3><div class="pie">'+svg+'<div class="legend">'+leg+'</div></div></div>';
+}
+function bars(t,r){if(!r.length)return '';const mx=Math.max(...r.map(v=>v[1]))||1;return '<div class="ch"><h3>'+t+'</h3>'+r.map(v=>'<div class="br"><span title="'+esc(v[0])+'">'+esc(v[0])+'</span><div class="trk"><i style="width:'+Math.round(v[1]/mx*100)+'%"></i></div><b>'+v[1]+'</b></div>').join('')+'</div>'}
+function renderStats(){
+  const a=load(),pcs=a.filter(x=>x.pc);
+  const d=pcs.filter(x=>x.pc.ts).map(x=>(x.pc.ts-x.id)/60000);
+  const avg=d.length?(d.reduce((s,v)=>s+v,0)/d.length).toFixed(1)+' min':'–';
+  $('kpis').innerHTML=[[a.length,'Alertes'],[pcs.length,'Prises en charge'],[avg,'Délai moyen']].map(k=>'<div class="kpi"><b>'+k[0]+'</b><span>'+k[1]+'</span></div>').join('');
+  const days=cnt(a.map(x=>new Date(x.id).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})));
+  $('statsBox').innerHTML=a.length?sets(a).map(s=>pie(s[0],s[1])).join(''):'<p class="mut">Aucune donnée pour le moment.</p>';
+}
+function expMsg(t){$('expMsg').textContent=t}
+function saveFile(name,data){const b=data instanceof Blob?data:new Blob([data],{type:name.endsWith('.xlsx')?'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':'text/csv;charset=utf-8'});const u=URL.createObjectURL(b),l=document.createElement('a');l.href=u;l.download=name;document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)}
+function avgBy(a,f){const m={};a.forEach(x=>{const v=f(x);if(v==null||isNaN(v))return;const k=x.pc.who.trim();(m[k]=m[k]||[]).push(v)});return Object.entries(m).map(([k,l])=>[k,+(l.reduce((s,v)=>s+v,0)/l.length).toFixed(1)]).sort((p,q)=>q[1]-p[1])}
+function sets(a){const pcs=a.filter(x=>x.pc);return[['Interventions par SST',cnt(pcs.map(x=>x.pc.who.trim()))],['Zones blessées',cnt(pcs.flatMap(x=>x.pc.zones||[]))],['Délai moyen de prise en charge par SST (min)',avgBy(pcs,x=>x.pc.ts?(x.pc.ts-x.id)/60000:null)],['Durée moyenne d’intervention par SST (min)',avgBy(pcs,x=>x.pc.ct?(x.pc.ct-x.pc.ts)/60000:null)],['Alertes par type',cnt(a.map(x=>x.type))],['Alertes par jour',cnt(a.map(x=>new Date(x.id).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit'})))],['Alertes par hall',cnt(a.filter(x=>x.hall).map(x=>x.hall))],['Nature des blessures',cnt(pcs.flatMap(x=>x.pc.types||[]))],['État des victimes',cnt(pcs.map(x=>x.pc.etat))]]}
+function chartPng(title,rows){
+  const r=topN(rows.filter(v=>v[1]>0)),tot=r.reduce((s,v)=>s+v[1],0),W=720,H=Math.max(300,70+r.length*28),c=document.createElement('canvas');c.width=W;c.height=H;
+  const g=c.getContext('2d');g.fillStyle='#ffffff';g.fillRect(0,0,W,H);
+  g.fillStyle='#1b1f27';g.font='bold 18px sans-serif';g.textAlign='left';g.fillText(title,16,32);
+  let a=-Math.PI/2;const cx=170,cy=64+(H-64)/2,rad=Math.min(120,(H-90)/2);
+  r.forEach((v,i)=>{const b=a+v[1]/tot*2*Math.PI;g.beginPath();g.moveTo(cx,cy);g.arc(cx,cy,rad,a,b);g.closePath();g.fillStyle=COL[i%10];g.fill();g.strokeStyle='#ffffff';g.lineWidth=2;g.stroke();a=b;
+    const y=62+i*28;g.fillStyle=COL[i%10];g.fillRect(340,y,14,14);g.fillStyle='#1b1f27';g.font='14px sans-serif';let t=String(v[0]);if(t.length>34)t=t.slice(0,33)+'…';g.fillText(t+' — '+v[1]+' ('+Math.round(v[1]/tot*100)+'%)',362,y+12)});
+  return c.toDataURL('image/png').split(',')[1];
+}
+async function buildXlsx(rows,a){
+  const pcs=a.filter(x=>x.pc),d=pcs.filter(x=>x.pc.ts).map(x=>(x.pc.ts-x.id)/60000);
+  const avg=d.length?+(d.reduce((s,v)=>s+v,0)/d.length).toFixed(1):0;
+  const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet('Alertes'),keys=Object.keys(rows[0]);
+  ws.columns=keys.map(k=>({header:k,key:k,width:Math.min(40,Math.max(14,k.length+4))}));
+  rows.forEach(r=>ws.addRow(r));ws.getRow(1).font={bold:true};ws.views=[{state:'frozen',ySplit:1}];
+  const S=sets(a),s2=wb.addWorksheet('Statistiques');
+  s2.columns=[{header:'Rubrique',key:'r',width:26},{header:'Valeur',key:'v',width:34},{header:'Nombre ou minutes',key:'n',width:18}];
+  s2.addRow({r:'Indicateur',v:'Alertes',n:a.length});s2.addRow({r:'Indicateur',v:'Prises en charge',n:pcs.length});s2.addRow({r:'Indicateur',v:'Délai moyen (min)',n:avg});
+  S.forEach(([t,l])=>l.forEach(v=>s2.addRow({r:t,v:v[0],n:v[1]})));s2.getRow(1).font={bold:true};
+  const s3=wb.addWorksheet('Graphiques');s3.getCell('A1').value='Statistiques des alertes PTI — export du '+new Date().toLocaleString('fr-FR');s3.getCell('A1').font={bold:true,size:14};
+  let top=2;
+  S.forEach(([t,l])=>{if(!l.length)return;const L=topN(l.filter(v=>v[1]>0));if(!L.length)return;const h=Math.max(300,70+L.length*28),id=wb.addImage({base64:chartPng(t,L),extension:'png'});s3.addImage(id,{tl:{col:0,row:top},ext:{width:720,height:h}});top+=Math.ceil(h/20)+2});
+  return await wb.xlsx.writeBuffer();
+}
+$('exp').onclick=async()=>{
+  const a=load();if(!a.length){expMsg('Aucune alerte à exporter.');return}
+  const rows=a.map(x=>{const p=x.pc||{};return{'Date':new Date(x.id).toLocaleString('fr-FR'),'Type':x.type,'Travailleur':x.who,'Hall':x.hall||'','Lieu / situation':x.msg||'','Latitude':x.pos?x.pos.lat:'','Longitude':x.pos?x.pos.lon:'','Statut':p.st||'Sans prise en charge','Responsable':p.who||'','État victime':p.etat||'','Zones blessées':(p.zones||[]).join(', '),'Nature des blessures':(p.types||[]).join(', '),'Précision':p.autre||'','Actions':(p.act||[]).join(', '),'Observations':p.note||'','Délai prise en charge (min)':p.ts?+((p.ts-x.id)/60000).toFixed(1):'','Durée intervention (min)':p.ct?+((p.ct-p.ts)/60000).toFixed(1):''}});
+  try{
+    let data,name;
+    if(window.ExcelJS){data=await buildXlsx(rows,a);name='alertes-pti.xlsx'}else if(window.XLSX){
+      const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows),'Alertes');
+      const st=[];[['Type',cnt(a.map(x=>x.type))],['Hall',cnt(a.filter(x=>x.hall).map(x=>x.hall))],['Zone blessée',cnt(a.flatMap(x=>x.pc?x.pc.zones||[]:[]))],['Nature',cnt(a.flatMap(x=>x.pc?x.pc.types||[]:[]))],['État victime',cnt(a.filter(x=>x.pc).map(x=>x.pc.etat))]].forEach(([r,l])=>l.forEach(v=>st.push({Rubrique:r,Valeur:v[0],Nombre:v[1]})));
+      XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(st),'Statistiques');
+      data=XLSX.write(wb,{type:'array',bookType:'xlsx'});name='alertes-pti.xlsx';
+    }else{
+      const h=Object.keys(rows[0]),q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+      data='\ufeff'+[h.map(q).join(';'),...rows.map(r=>h.map(k=>q(r[k])).join(';'))].join('\r\n');name='alertes-pti.csv';
+    }
+    saveFile(name,data);expMsg('✔ Fichier exporté.');
+  }catch(e){expMsg('Export impossible ('+((e&&e.message)||'erreur')+').')}
+};
+
+// Alarme SST / superviseur
+let armed=false,curTab=1,almTimer=null,ctx=null;const muted=new Set();
+function beep(){try{const o=ctx.createOscillator(),g=ctx.createGain();o.type='square';o.frequency.value=880;g.gain.value=.25;o.connect(g);g.connect(ctx.destination);o.start();o.frequency.setValueAtTime(660,ctx.currentTime+.25);o.stop(ctx.currentTime+.5)}catch(e){}}
+function ring(){beep();try{if(navigator.vibrate)navigator.vibrate([400,150,400,150,400])}catch(e){}}
+function pending(){return load().filter(x=>x.type==='SOS'&&!x.pc)}
+function checkAlarm(){
+  const p=pending(),live=curTab!==1,loud=p.filter(x=>!muted.has(x.id)),box=$('almAlert');
+  if(live&&p.length){box.classList.remove('hide');box.innerHTML='🚨 '+p.length+' SOS en attente de prise en charge'+(loud.length&&armed?' <button class="b" id="mute" style="margin-left:8px;padding:4px 10px;background:#fff;color:#000">Couper le son</button>':'')}else box.classList.add('hide');
+  if(armed&&live&&loud.length){if(!almTimer){ring();almTimer=setInterval(ring,2500)}}else{clearInterval(almTimer);almTimer=null}
+}
+document.addEventListener('click',e=>{if(e.target.id==='mute'){pending().forEach(x=>muted.add(x.id));checkAlarm()}});
+window.addEventListener('storage',e=>{if(e.key===KEY)render()});
+$('armBtn').onclick=()=>{
+  armed=!armed;
+  if(armed){try{ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();if(ctx.resume)ctx.resume()}catch(e){}ring()}
+  $('armBtn').textContent=armed?'🔕 Désactiver l’alarme':'🔔 Activer l’alarme (SST / superviseur)';
+  $('almTxt').textContent=armed?'Alarme active : son et vibration à chaque SOS non pris en charge.':'Active le son et la vibration sur cet appareil. À activer une fois par session.';
+  checkAlarm();
+};
+
+// Connexion : comptes Firebase si configuré, sinon mot de passe local (SHA-256, voir README)
+const SUP_HASH="56a0fa2ee9f554236a60d89f3bfcc12dc5b12736d286b22e72ab6b762e452eaa";
+let supOk=false;try{supOk=sessionStorage.getItem('sw_sup')==='1'}catch(e){}
+async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('safework:'+t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
+function allowed(n){if(FB)return n===2?role==='superviseur':!!role;return n===2?supOk:true}
+function openLogin(n,msg){
+  pendingTab=n;$('lgTitle').textContent=n===2?'Accès superviseur':'Accès SST';
+  $('lgMailBox').style.display=FB?'block':'none';$('lgErr').textContent=msg||'';$('lgPw').value='';
+  $('lg').style.display='flex';(FB?$('lgMail'):$('lgPw')).focus();
+}
+function authError(e){
+  const c=(e&&e.code)||'';
+  if(/invalid-credential|wrong-password|user-not-found|invalid-email|missing-password/.test(c))return 'E-mail ou mot de passe incorrect.';
+  if(/too-many-requests/.test(c))return 'Trop de tentatives : réessayez plus tard.';
+  return 'Connexion impossible'+(c?' ('+c+')':'')+'.';
+}
+async function doLogin(){
+  $('lgErr').textContent='';
+  if(FB){
+    try{
+      const c=await firebase.auth().signInWithEmailAndPassword($('lgMail').value.trim(),$('lgPw').value);
+      const r=(await roleRef(c.user.uid).once('value')).val();
+      if(r!=='sst'&&r!=='superviseur'){await firebase.auth().signOut();$('lgErr').textContent='Ce compte n’a pas de rôle (SST ou superviseur). Contactez l’administrateur.';return}
+      role=r;startListen();cloudStatus();
+      if(!allowed(pendingTab)){$('lgErr').textContent='Accès réservé au superviseur : ce compte est un compte SST.';$('lgPw').value='';return}
+      $('lg').style.display='none';tab(pendingTab);
+    }catch(e){$('lgErr').textContent=authError(e);$('lgPw').value=''}
+  }else{
+    try{
+      if(await sha($('lgPw').value)===SUP_HASH){supOk=true;try{sessionStorage.setItem('sw_sup','1')}catch(e){}$('lg').style.display='none';tab(2)}
+      else{$('lgErr').textContent='Mot de passe incorrect.';$('lgPw').value=''}
+    }catch(e){$('lgErr').textContent='Connexion impossible (la page doit être servie en HTTPS).'}
+  }
+}
+async function doLogout(){
+  if(FB){try{await firebase.auth().signOut()}catch(e){}stopListen()}
+  else{supOk=false;try{sessionStorage.removeItem('sw_sup')}catch(e){}}
+  tab(1);
+}
+$('lgGo').onclick=doLogin;
+$('lgX').onclick=()=>{$('lg').style.display='none'};
+['lgPw','lgMail'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()}));
+document.querySelectorAll('.lo').forEach(b=>{b.onclick=doLogout});
+
+// Onglets
+function tab(n){if((n===2||n===3)&&!allowed(n)){openLogin(n);return}curTab=n;$('alm').classList.toggle('hide',n===1);[1,2,3].forEach(i=>{$('v'+i).classList.toggle('hide',n!==i);$('t'+i).classList.toggle('on',n===i)});render()}
+$('t1').onclick=()=>tab(1);$('t2').onclick=()=>tab(2);$('t3').onclick=()=>tab(3);
+
+getPos();render();initCloud();
+</script>
+</body>
+</html>

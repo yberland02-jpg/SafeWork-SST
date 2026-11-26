@@ -63,7 +63,6 @@ textarea{width:100%;min-height:70px;padding:10px;border:1px solid var(--bd);bord
   <div class="card"><h2>Alerte SOS (prévient les SST et le superviseur)</h2>
     <button class="sos" id="sos">SOS</button>
     <input id="sstMsg" placeholder="Lieu / situation (facultatif)" style="margin-top:10px"><p class="mut" style="text-align:center;margin:8px 0 0">Prévient les SST et le superviseur. Compte à rebours de 5 s pour annuler.</p>
-    <p id="sendStatus" class="mut" style="text-align:center;margin:8px 0 0;font-weight:600"></p>
   </div>
   <div class="card"><h2>Minuteur de prévoyance</h2>
     <div id="pIdle"><div class="row"><select id="dur"><option value="1">1 min (test)</option><option value="15">15 min</option><option value="30" selected>30 min</option><option value="60">1 h</option><option value="120">2 h</option></select><button class="b" id="pGo">Démarrer</button></div>
@@ -74,7 +73,7 @@ textarea{width:100%;min-height:70px;padding:10px;border:1px solid var(--bd);bord
 </section>
 
 <section id="v2" class="hide">
-  <div class="row" style="justify-content:flex-end;margin-bottom:8px"><button class="b lo" style="background:var(--mut);padding:6px 12px">Se déconnecter</button></div>
+  <div class="row" style="justify-content:flex-end;margin-bottom:8px"><button class="b" id="logout" style="background:var(--mut);padding:6px 12px">Se déconnecter</button></div>
   <div class="card"><h2>Statistiques</h2>
   <div class="kpis" id="kpis"></div>
   <details id="statDet" style="margin-top:10px"><summary style="cursor:pointer;font-weight:600">Voir les graphiques</summary><div id="statsBox"></div></details>
@@ -86,13 +85,12 @@ textarea{width:100%;min-height:70px;padding:10px;border:1px solid var(--bd);bord
   <p class="mut">Les alertes sont partagées entre appareils uniquement si Firebase est configuré (voir README). Sans configuration, elles restent sur cet appareil.</p>
 </section>
 <section id="v3" class="hide">
-  <div class="row" style="justify-content:flex-end;margin-bottom:8px"><button class="b lo" style="background:var(--mut);padding:6px 12px">Se déconnecter</button></div>
   <div class="card"><h2>Alertes SST</h2><div id="listS"></div></div>
   <p class="mut">Cet écran reçoit les SOS et les alertes de prévoyance, comme celui du superviseur.</p>
 </section>
 </main>
 
-<div id="lg" style="position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:10;padding:16px"><div class="card" style="width:100%;max-width:360px;margin:0"><h2 id="lgTitle">Accès superviseur</h2><div id="lgMailBox"><label for="lgMail">E-mail</label><input id="lgMail" type="email" autocomplete="username"></div><label for="lgPw">Mot de passe</label><input id="lgPw" type="password" autocomplete="current-password"><p class="mut" id="lgErr" style="color:var(--rd);margin:8px 0 0"></p><div class="row" style="margin-top:12px"><button class="b" id="lgGo" style="flex:1">Se connecter</button><button class="b" id="lgX" style="background:var(--mut)">Annuler</button></div></div></div>
+<div id="lg" style="position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:10;padding:16px"><div class="card" style="width:100%;max-width:360px;margin:0"><h2>Accès superviseur</h2><label for="lgPw">Mot de passe</label><input id="lgPw" type="password" autocomplete="current-password"><p class="mut" id="lgErr" style="color:var(--rd);margin:8px 0 0"></p><div class="row" style="margin-top:12px"><button class="b" id="lgGo" style="flex:1">Se connecter</button><button class="b" id="lgX" style="background:var(--mut)">Annuler</button></div></div></div>
 <div id="pc"><div class="card">
   <h2>Prise en charge de la victime</h2>
   <div class="mut" id="pcT"></div>
@@ -116,7 +114,6 @@ textarea{width:100%;min-height:70px;padding:10px;border:1px solid var(--bd);bord
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
@@ -125,66 +122,38 @@ const KEY='safework_alerts';
 let last=null,pTimer=null,pEnd=0,cdTimer=null;
 
 // ===== CONFIGURATION FIREBASE (facultative) =====
-// Sans databaseURL : mode local (alertes sur cet appareil ; mot de passe superviseur défini plus bas).
-// Avec Firebase : comptes e-mail / mot de passe pour le superviseur et les SST (rôles stockés dans la base),
-// alertes partagées en temps réel. Les travailleurs n'ont pas de compte : ils envoient leurs alertes anonymement.
+// Laisser databaseURL vide = mode local (alertes visibles uniquement sur cet appareil).
+// Renseigner les valeurs de votre projet Firebase (Realtime Database) pour partager les alertes en temps réel entre appareils.
 const FIREBASE_CONFIG={apiKey:"AIzaSyCEDh4DBz99QWKKulIxE3maPFtUsI__1t8",authDomain:"safework-sst-a366b.firebaseapp.com",databaseURL:"https://safework-sst-a366b-default-rtdb.firebaseio.com",projectId:"safework-sst-a366b",appId:"1:530305533847:web:d2640761eced881b4666d2"};
 const DB_PATH='pti/alertes';
-const FB=!!FIREBASE_CONFIG.databaseURL;
-let ref=null,roleRef=null,authReady=Promise.resolve(),listening=false,role=null,pendingTab=2;
-function setCloud(t){$('cloud').textContent=t}
-function cloudStatus(){
-  if(!FB){setCloud('Mode local : alertes non partagées entre appareils (voir README)');return}
-  if(listening)setCloud('☁️ Connecté ('+(role==='superviseur'?'superviseur':'SST')+') : alertes en temps réel');
-  else setCloud('☁️ Les alertes envoyées sont transmises aux SST');
-}
-function load(){if(FB)return window.__mem||[];try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return window.__mem||[]}}
+let db=null;
+function setCloud(ok){$('cloud').textContent=db?(ok?'☁️ Connecté : alertes partagées en temps réel':'⚠️ Connexion Firebase perdue : données locales'):'Mode local : alertes non partagées entre appareils (voir README)'}
+function load(){if(db)return JSON.parse(JSON.stringify(window.__mem||[]));try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return window.__mem||[]}}
 function save(a){
-  const prev=window.__mem||(FB?[]:(function(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}})());
+  const prev=db?(window.__mem||[]):(window.__mem||(function(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}})());
   window.__mem=a;
-  if(!FB){try{localStorage.setItem(KEY,JSON.stringify(a))}catch(e){}return Promise.resolve(true)}
-  const o={},pm={};prev.forEach(x=>{pm[x.id]=JSON.stringify(x)});
-  a.forEach(x=>{const j=JSON.stringify(x);if(pm[x.id]!==j)o[x.id]=JSON.parse(j)});
-  prev.forEach(x=>{if(!a.some(y=>y.id===x.id))o[x.id]=null});
-  if(!Object.keys(o).length)return Promise.resolve(true);
-  const send=authReady.then(()=>ref.update(o)).then(()=>true).catch(()=>false);
-  const slow=new Promise(r=>setTimeout(()=>r('pending'),8000));
-  return Promise.race([send,slow]);
+  try{localStorage.setItem(KEY,JSON.stringify(a))}catch(e){}
+  if(db){
+    const o={},pm={};prev.forEach(x=>{pm[x.id]=JSON.stringify(x)});
+    a.forEach(x=>{const j=JSON.stringify(x);if(pm[x.id]!==j)o[x.id]=JSON.parse(j)});
+    prev.forEach(x=>{if(!a.some(y=>y.id===x.id))o[x.id]=null});
+    if(Object.keys(o).length)db.update(o).catch(()=>setCloud(false));
+  }
 }
-function startListen(){
-  if(listening||!ref)return;listening=true;
-  ref.on('value',s=>{
-    const v=s.val(),a=Array.isArray(v)?v.filter(Boolean):(v?Object.values(v):[]);
-    a.forEach(x=>{if(x.pc){x.pc.act=x.pc.act||[];x.pc.zones=x.pc.zones||[];x.pc.types=x.pc.types||[]}});
-    a.sort((p,q)=>q.id-p.id);window.__mem=a;render();
-  },()=>{listening=false;setCloud('⚠️ Lecture impossible : vérifiez le rôle du compte et les règles Firebase')});
-  cloudStatus();
-}
-function stopListen(){if(ref)ref.off('value');listening=false;window.__mem=[];role=null;cloudStatus();render()}
 function initCloud(){
-  cloudStatus();
-  if(!FB)return;
-  if(!window.firebase){setCloud('⚠️ Firebase non chargé');return}
+  setCloud(false);
+  if(!FIREBASE_CONFIG.databaseURL||!window.firebase)return;
   try{
     firebase.initializeApp(FIREBASE_CONFIG);
-    ref=firebase.database().ref(DB_PATH);
-    roleRef=uid=>firebase.database().ref('pti/roles/'+uid);
-    const auth=firebase.auth();
-    authReady=new Promise(res=>{
-      let first=true;const done=()=>{if(first){first=false;res()}};
-      auth.onAuthStateChanged(async u=>{
-        if(!u){
-          try{await auth.signInAnonymously()}
-          catch(e){setCloud('⚠️ Activez l’authentification anonyme dans Firebase (voir README) : les alertes ne pourront pas être envoyées');done()}
-          return;
-        }
-        if(u.isAnonymous){if(listening)stopListen();role=null;cloudStatus();done();return}
-        let r=null;try{r=(await roleRef(u.uid).once('value')).val()}catch(e){}
-        if(r==='sst'||r==='superviseur'){role=r;startListen();cloudStatus();done()}
-        else{role=null;await auth.signOut()}
-      });
-    });
-  }catch(e){setCloud('⚠️ Erreur de configuration Firebase')}
+    const ref=firebase.database().ref(DB_PATH);db=ref;
+    ref.on('value',s=>{
+      const v=s.val(),a=Array.isArray(v)?v.filter(Boolean):(v?Object.values(v):[]);
+      a.forEach(x=>{if(x.pc){x.pc.act=x.pc.act||[];x.pc.zones=x.pc.zones||[];x.pc.types=x.pc.types||[]}});
+      a.sort((p,q)=>q.id-p.id);
+      db=ref;window.__mem=a;try{localStorage.setItem(KEY,JSON.stringify(a))}catch(e){}
+      setCloud(true);render();
+    },()=>setCloud(false));
+  }catch(e){db=null;setCloud(false)}
 }
 
 function getPos(){
@@ -198,9 +167,7 @@ function getPos(){
 function raise(type,msg){
   const a=load();
   a.unshift({id:Date.now(),type,msg:msg||'',hall:$('hall').value,who:$('name').value.trim()||'Anonyme',at:new Date().toLocaleString('fr-FR'),pos:last,ok:false});
-  const p=save(a);render();
-  $('sendStatus').textContent='Envoi en cours…';
-  p.then(r=>{$('sendStatus').textContent=r===true?(FB?'✔ Alerte transmise aux SST.':'✔ Alerte enregistrée (mode local : non partagée).'):'⚠️ Transmission non confirmée : prévenez un SST par téléphone ou appelez les secours (15/18/112).'});
+  save(a);render();
 }
 
 function fill(el,a){
@@ -354,52 +321,24 @@ $('armBtn').onclick=()=>{
   checkAlarm();
 };
 
-// Connexion : comptes Firebase si configuré, sinon mot de passe local (SHA-256, voir README)
+// Connexion superviseur (SHA-256 du mot de passe, voir README pour le changer)
 const SUP_HASH="56a0fa2ee9f554236a60d89f3bfcc12dc5b12736d286b22e72ab6b762e452eaa";
 let supOk=false;try{supOk=sessionStorage.getItem('sw_sup')==='1'}catch(e){}
 async function sha(t){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode('safework:'+t));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
-function allowed(n){if(FB)return n===2?role==='superviseur':!!role;return n===2?supOk:true}
-function openLogin(n,msg){
-  pendingTab=n;$('lgTitle').textContent=n===2?'Accès superviseur':'Accès SST';
-  $('lgMailBox').style.display=FB?'block':'none';$('lgErr').textContent=msg||'';$('lgPw').value='';
-  $('lg').style.display='flex';(FB?$('lgMail'):$('lgPw')).focus();
-}
-function authError(e){
-  const c=(e&&e.code)||'';
-  if(/invalid-credential|wrong-password|user-not-found|invalid-email|missing-password/.test(c))return 'E-mail ou mot de passe incorrect.';
-  if(/too-many-requests/.test(c))return 'Trop de tentatives : réessayez plus tard.';
-  return 'Connexion impossible'+(c?' ('+c+')':'')+'.';
-}
+function openLogin(){$('lgErr').textContent='';$('lgPw').value='';$('lg').style.display='flex';$('lgPw').focus()}
 async function doLogin(){
-  $('lgErr').textContent='';
-  if(FB){
-    try{
-      const c=await firebase.auth().signInWithEmailAndPassword($('lgMail').value.trim(),$('lgPw').value);
-      const r=(await roleRef(c.user.uid).once('value')).val();
-      if(r!=='sst'&&r!=='superviseur'){await firebase.auth().signOut();$('lgErr').textContent='Ce compte n’a pas de rôle (SST ou superviseur). Contactez l’administrateur.';return}
-      role=r;startListen();cloudStatus();
-      if(!allowed(pendingTab)){$('lgErr').textContent='Accès réservé au superviseur : ce compte est un compte SST.';$('lgPw').value='';return}
-      $('lg').style.display='none';tab(pendingTab);
-    }catch(e){$('lgErr').textContent=authError(e);$('lgPw').value=''}
-  }else{
-    try{
-      if(await sha($('lgPw').value)===SUP_HASH){supOk=true;try{sessionStorage.setItem('sw_sup','1')}catch(e){}$('lg').style.display='none';tab(2)}
-      else{$('lgErr').textContent='Mot de passe incorrect.';$('lgPw').value=''}
-    }catch(e){$('lgErr').textContent='Connexion impossible (la page doit être servie en HTTPS).'}
-  }
-}
-async function doLogout(){
-  if(FB){try{await firebase.auth().signOut()}catch(e){}stopListen()}
-  else{supOk=false;try{sessionStorage.removeItem('sw_sup')}catch(e){}}
-  tab(1);
+  try{
+    if(await sha($('lgPw').value)===SUP_HASH){supOk=true;try{sessionStorage.setItem('sw_sup','1')}catch(e){}$('lg').style.display='none';tab(2)}
+    else{$('lgErr').textContent='Mot de passe incorrect.';$('lgPw').value=''}
+  }catch(e){$('lgErr').textContent='Connexion impossible (la page doit être servie en HTTPS).'}
 }
 $('lgGo').onclick=doLogin;
 $('lgX').onclick=()=>{$('lg').style.display='none'};
-['lgPw','lgMail'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()}));
-document.querySelectorAll('.lo').forEach(b=>{b.onclick=doLogout});
+$('lgPw').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin()});
+$('logout').onclick=()=>{supOk=false;try{sessionStorage.removeItem('sw_sup')}catch(e){}tab(1)};
 
 // Onglets
-function tab(n){if((n===2||n===3)&&!allowed(n)){openLogin(n);return}curTab=n;$('alm').classList.toggle('hide',n===1);[1,2,3].forEach(i=>{$('v'+i).classList.toggle('hide',n!==i);$('t'+i).classList.toggle('on',n===i)});render()}
+function tab(n){if(n===2&&!supOk){openLogin();return}curTab=n;$('alm').classList.toggle('hide',n===1);[1,2,3].forEach(i=>{$('v'+i).classList.toggle('hide',n!==i);$('t'+i).classList.toggle('on',n===i)});render()}
 $('t1').onclick=()=>tab(1);$('t2').onclick=()=>tab(2);$('t3').onclick=()=>tab(3);
 
 getPos();render();initCloud();
